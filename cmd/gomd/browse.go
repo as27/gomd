@@ -6,6 +6,7 @@ import (
 	"log"
 	"path/filepath"
 
+	"github.com/gdamore/tcell"
 	"github.com/rivo/tview"
 )
 
@@ -15,7 +16,7 @@ type browser struct {
 	files []string
 }
 
-func newBrowser(fpath string) *browser {
+func newBrowser(fpath string, nextFocus chan struct{}) *browser {
 	b := &browser{
 		Table: tview.NewTable(),
 		fpath: fpath,
@@ -24,6 +25,23 @@ func newBrowser(fpath string) *browser {
 	b.SetTitle(b.fpath)
 	b.SetSelectable(true, false)
 	b.dir(fpath)
+	b.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+		log.Println(event.Key())
+		switch event.Key() {
+		case 9: // tab key
+			nextFocus <- struct{}{}
+		case 13: // enter key
+			r, _ := b.GetSelection()
+			v := b.GetCell(r, 0).Text
+			b.dir(filepath.Join(fpath, v))
+		}
+		//r, _ := b.GetSelection()
+		//log.Println("Selected row: ", r)
+		/*if event.Key() == tcell.KeyCtrlJ || event.Key() == 9 {
+			a.view.SetFocus(a.navView)
+		}*/
+		return event
+	})
 	return b
 }
 
@@ -36,12 +54,18 @@ func (b *browser) dir(fpath string) error {
 	b.files = []string{}
 	b.Table.Clear()
 	b.Table.SetTitle(fpath)
+	b.Table.SetCellSimple(0, 0, "..")
+	b.Table.SetCellSimple(0, 1, "")
+	b.Table.SetCellSimple(0, 2, "")
 	for i, f := range fs {
-		name := f.Name()
-		b.Table.SetCellSimple(i, 0, name)
-		b.Table.SetCellSimple(i, 1, f.ModTime().Format("2006.01.02 15:04:05"))
-		b.Table.SetCellSimple(i, 2, fmt.Sprintf("%v", f.Size()))
+		b.Table.SetCell(i+1, 0, tview.NewTableCell(f.Name()).SetExpansion(10))
+		b.Table.SetCell(i+1, 1, tview.NewTableCell(
+			f.ModTime().Format("2006.01.02 15:04:05")).
+			SetAlign(tview.AlignRight))
+		b.Table.SetCell(i+1, 2, tview.NewTableCell(
+			fmt.Sprintf("%v", f.Size())).SetAlign(tview.AlignRight))
 	}
+
 	return nil
 	/*
 		a.navView.AddItem("..", "", 0, func() {

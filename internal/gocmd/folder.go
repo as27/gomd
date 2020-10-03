@@ -14,8 +14,8 @@ type Folder struct {
 	selected int
 }
 
-// NewFolder loads the FileInfos of a directory and sets
-// the index 0 as selected.
+// NewFolder creates a folder type and loads the FileInfos
+// of a directory and sets the index 0 as selected.
 func NewFolder(fpath string) (*Folder, error) {
 	if !filepath.IsAbs(fpath) {
 		fpath, err := filepath.Abs(fpath)
@@ -50,5 +50,13 @@ func (f *Folder) Prev() int {
 	if f.selected < 0 {
 		f.selected = 0
 	}
+	return f.selected
+}
+
+func (f *Folder) Files() []os.FileInfo {
+	return f.files
+}
+
+func (f *Folder) Selected() int {
 	return f.selected
 }

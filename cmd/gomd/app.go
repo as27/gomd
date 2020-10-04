@@ -3,6 +3,8 @@ package main
 import (
 	"fmt"
 	"log"
+	"os"
+	"path/filepath"
 
 	"github.com/as27/gomd/internal/gocmd"
 	"github.com/gdamore/tcell"
@@ -10,19 +12,34 @@ import (
 )
 
 type app struct {
-	files  gocmd.Files
-	view   *tview.Application
-	root   tview.Primitive
-	head   tview.Primitive
-	left   *browser
-	right  *browser
-	cmd    tview.Primitive
-	bottom tview.Primitive
+	files   gocmd.Files
+	view    *tview.Application
+	root    tview.Primitive
+	head    tview.Primitive
+	left    *browser
+	right   *browser
+	cmd     tview.Primitive
+	bottom  tview.Primitive
+	cmdMode bool
 }
 
 func (a *app) inputEvents(event *tcell.EventKey) *tcell.EventKey {
 	log.Printf("Key(): %v Rune():%v", event.Key(), event.Rune())
+	// ensure that ctrl c always works
+	if event.Key() == tcell.KeyCtrlC {
+		os.Exit(0)
+	}
+	if a.cmdMode {
+		if event.Key() == tcell.KeyEsc {
+			a.cmdMode = false
+		}
+		return event
+	}
 	switch event.Rune() {
+	case ':': // switch to cmd mode
+		a.view.SetFocus(a.cmd)
+		a.cmdMode = true
+		return nil
 	case 'j': // j next right
 		a.view.SetFocus(a.right)
 		a.files.Right.Next()
@@ -33,14 +50,50 @@ func (a *app) inputEvents(event *tcell.EventKey) *tcell.EventKey {
 		a.files.Right.Prev()
 		a.right.makeTableView()
 		return nil
+	case 'l': // one folder up right
+		a.view.SetFocus(a.right)
+		a.files.Right, _ = gocmd.NewFolder(
+			filepath.Join(a.files.Right.Path, ".."))
+		a.right.Folder = a.files.Right
+		a.right.makeTableView()
+		return nil
+	case 'h': // enter folder right
+		a.view.SetFocus(a.right)
+		selectedFile := a.right.Folder.SelectedFile()
+		if !selectedFile.IsDir() {
+			return nil
+		}
+		a.files.Right, _ = gocmd.NewFolder(
+			filepath.Join(a.files.Right.Path, selectedFile.Name()))
+		a.right.Folder = a.files.Right
+		a.right.makeTableView()
+		return nil
+	case 's': // one folder up left
+		a.view.SetFocus(a.left)
+		a.files.Left, _ = gocmd.NewFolder(
+			filepath.Join(a.files.Left.Path, ".."))
+		a.left.Folder = a.files.Left
+		a.left.makeTableView()
+		return nil
 	case 'f': // f next left
 		a.view.SetFocus(a.left)
 		a.files.Left.Next()
 		a.left.makeTableView()
 		return nil
-	case 'd': // f next left
+	case 'd': // f prev left
 		a.view.SetFocus(a.left)
 		a.files.Left.Prev()
+		a.left.makeTableView()
+		return nil
+	case 'g': // enter folder left
+		a.view.SetFocus(a.left)
+		selectedFile := a.left.Folder.SelectedFile()
+		if !selectedFile.IsDir() {
+			return nil
+		}
+		a.files.Left, _ = gocmd.NewFolder(
+			filepath.Join(a.files.Left.Path, selectedFile.Name()))
+		a.left.Folder = a.files.Left
 		a.left.makeTableView()
 		return nil
 	}
@@ -70,7 +123,8 @@ func newApp() *app {
 	a.head = newTView("t1", "text1")
 	a.left = newBrowser(a.files.Left)
 	a.right = newBrowser(a.files.Right)
-	a.cmd = newTView("cmd", "text1 cmd")
+	a.cmd = tview.NewInputField().
+		SetLabel("Cmd:")
 	a.bottom = tview.NewTextView()
 	return &a
 }
@@ -94,7 +148,7 @@ func (a *app) run() error {
 			AddItem(a.right, 0, 2, false),
 			0, 2, true).
 		AddItem(a.cmd, 1, 1, false).
-		AddItem(a.bottom, 9, 1, false)
+		AddItem(a.bottom, 4, 1, false)
 	//root.SetBorder(true)
 	root.SetTitle("gomd")
 	a.root = root

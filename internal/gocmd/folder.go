@@ -17,11 +17,9 @@ type Folder struct {
 // NewFolder creates a folder type and loads the FileInfos
 // of a directory and sets the index 0 as selected.
 func NewFolder(fpath string) (*Folder, error) {
-	if !filepath.IsAbs(fpath) {
-		fpath, err := filepath.Abs(fpath)
-		if err != nil {
-			return nil, fmt.Errorf("gocmd.NewFolder(%s) Abs(): %w", fpath, err)
-		}
+	fpath, err := filepath.Abs(fpath)
+	if err != nil {
+		return nil, fmt.Errorf("gocmd.NewFolder(%s) Abs(): %w", fpath, err)
 	}
 	f := &Folder{
 		Path: fpath,
@@ -59,4 +57,8 @@ func (f *Folder) Files() []os.FileInfo {
 
 func (f *Folder) Selected() int {
 	return f.selected
+}
+
+func (f *Folder) SelectedFile() os.FileInfo {
+	return f.files[f.selected]
 }

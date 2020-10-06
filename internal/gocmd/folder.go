@@ -17,20 +17,25 @@ type Folder struct {
 // NewFolder creates a folder type and loads the FileInfos
 // of a directory and sets the index 0 as selected.
 func NewFolder(fpath string) (*Folder, error) {
+	f := &Folder{}
+	f.SetDir(fpath)
+
+	return f, nil
+}
+
+func (f *Folder) SetDir(fpath string) error {
 	fpath, err := filepath.Abs(fpath)
 	if err != nil {
-		return nil, fmt.Errorf("gocmd.NewFolder(%s) Abs(): %w", fpath, err)
+		return fmt.Errorf("gocmd.NewFolder(%s) Abs(): %w", fpath, err)
 	}
-	f := &Folder{
-		Path: fpath,
-	}
+	f.Path = fpath
 	files, err := ioutil.ReadDir(fpath)
 	if err != nil {
-		return f, fmt.Errorf("gocmd.NewFolder(%s) ReadDir: %w", fpath, err)
+		return fmt.Errorf("gocmd.NewFolder(%s) SetDir: %w", fpath, err)
 	}
 	f.files = files
 	f.selected = 0
-	return f, nil
+	return nil
 }
 
 // Next selects the next file inside the folder

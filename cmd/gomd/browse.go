@@ -26,9 +26,6 @@ func newBrowser(f *gocmd.Folder) *browser {
 func (b *browser) makeTableView() error {
 	b.Table.Clear()
 	b.Table.SetTitle(b.Folder.Path)
-	//b.Table.SetCellSimple(0, 0, "..")
-	//b.Table.SetCellSimple(0, 1, "")
-	//b.Table.SetCellSimple(0, 2, "")
 	for i, f := range b.Folder.Files() {
 		dir := ""
 		if f.IsDir() {

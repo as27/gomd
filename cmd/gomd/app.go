@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"log"
-	"os"
 	"path/filepath"
 
 	"github.com/as27/gomd/internal/gocmd"
@@ -12,13 +11,13 @@ import (
 )
 
 type app struct {
-	files   gocmd.Files
-	view    *tview.Application
-	root    tview.Primitive
-	head    tview.Primitive
+	files gocmd.Files
+	view  *tview.Application
+	root  tview.Primitive
+	// head    tview.Primitive
 	left    *browser
 	right   *browser
-	cmd     tview.Primitive
+	cmd     *tview.InputField
 	bottom  tview.Primitive
 	cmdMode bool
 }
@@ -26,19 +25,41 @@ type app struct {
 func (a *app) inputEvents(event *tcell.EventKey) *tcell.EventKey {
 	log.Printf("Key(): %v Rune():%v", event.Key(), event.Rune())
 	// ensure that ctrl c always works
-	if event.Key() == tcell.KeyCtrlC {
+	/*if event.Key() == tcell.KeyCtrlC {
 		os.Exit(0)
-	}
+	}*/
 	if a.cmdMode {
 		if event.Key() == tcell.KeyEsc {
+			a.cmd.SetText("")
+			a.cmd.SetFieldBackgroundColor(tcell.ColorBlack)
+			a.view.SetFocus(a.left)
 			a.cmdMode = false
 		}
 		return event
+	}
+	switch event.Key() {
+	case tcell.KeyEnter:
+		if a.left.HasFocus() {
+			a.enterFolder(a.left)
+			a.left.makeTableView()
+			return nil
+		} else if a.right.HasFocus() {
+			a.enterFolder(a.right)
+			a.right.makeTableView()
+			return nil
+		}
+	case tcell.KeyTab:
+		if a.left.HasFocus() {
+			a.view.SetFocus(a.right)
+		} else if a.right.HasFocus() {
+			a.view.SetFocus(a.left)
+		}
 	}
 	switch event.Rune() {
 	case ':': // switch to cmd mode
 		a.view.SetFocus(a.cmd)
 		a.cmdMode = true
+		a.cmd.SetFieldBackgroundColor(tcell.ColorGray)
 		return nil
 	case 'j': // j next right
 		a.view.SetFocus(a.right)
@@ -52,27 +73,19 @@ func (a *app) inputEvents(event *tcell.EventKey) *tcell.EventKey {
 		return nil
 	case 'l': // one folder up right
 		a.view.SetFocus(a.right)
-		a.files.Right, _ = gocmd.NewFolder(
-			filepath.Join(a.files.Right.Path, ".."))
-		a.right.Folder = a.files.Right
+		a.right.Folder.SetDir(
+			filepath.Join(a.right.Path, ".."))
 		a.right.makeTableView()
 		return nil
 	case 'h': // enter folder right
 		a.view.SetFocus(a.right)
-		selectedFile := a.right.Folder.SelectedFile()
-		if !selectedFile.IsDir() {
-			return nil
-		}
-		a.files.Right, _ = gocmd.NewFolder(
-			filepath.Join(a.files.Right.Path, selectedFile.Name()))
-		a.right.Folder = a.files.Right
+		a.enterFolder(a.right)
 		a.right.makeTableView()
 		return nil
 	case 's': // one folder up left
 		a.view.SetFocus(a.left)
-		a.files.Left, _ = gocmd.NewFolder(
-			filepath.Join(a.files.Left.Path, ".."))
-		a.left.Folder = a.files.Left
+		a.left.Folder.SetDir(
+			filepath.Join(a.left.Folder.Path, ".."))
 		a.left.makeTableView()
 		return nil
 	case 'f': // f next left
@@ -87,13 +100,7 @@ func (a *app) inputEvents(event *tcell.EventKey) *tcell.EventKey {
 		return nil
 	case 'g': // enter folder left
 		a.view.SetFocus(a.left)
-		selectedFile := a.left.Folder.SelectedFile()
-		if !selectedFile.IsDir() {
-			return nil
-		}
-		a.files.Left, _ = gocmd.NewFolder(
-			filepath.Join(a.files.Left.Path, selectedFile.Name()))
-		a.left.Folder = a.files.Left
+		a.enterFolder(a.left)
 		a.left.makeTableView()
 		return nil
 	}
@@ -120,11 +127,13 @@ func newApp() *app {
 		view: tview.NewApplication(),
 	}
 	a.view.SetInputCapture(a.inputEvents)
-	a.head = newTView("t1", "text1")
+	// a.head = tview.NewTextView()
 	a.left = newBrowser(a.files.Left)
 	a.right = newBrowser(a.files.Right)
 	a.cmd = tview.NewInputField().
-		SetLabel("Cmd:")
+		SetLabel("Cmd:").
+		SetFieldBackgroundColor(tcell.ColorBlack)
+
 	a.bottom = tview.NewTextView()
 	return &a
 }
@@ -142,7 +151,7 @@ func newTView(t, s string) *tview.TextView {
 // app and starts it.
 func (a *app) run() error {
 	root := tview.NewFlex().SetDirection(tview.FlexRow).
-		AddItem(a.head, 1, 1, false).
+		//AddItem(a.head, 1, 1, false).
 		AddItem(tview.NewFlex().
 			AddItem(a.left, 0, 2, false).
 			AddItem(a.right, 0, 2, false),
@@ -157,4 +166,16 @@ func (a *app) run() error {
 
 func (a *app) update() {
 	a.view.Draw()
+}
+
+func (a *app) enterFolder(b *browser) error {
+	if b == nil || !b.HasFocus() {
+		return nil
+	}
+	selectedFile := b.Folder.SelectedFile()
+	if !selectedFile.IsDir() {
+		return nil
+	}
+	return b.Folder.SetDir(
+		filepath.Join(b.Folder.Path, selectedFile.Name()))
 }

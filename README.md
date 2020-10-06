@@ -25,3 +25,5 @@ At the moment the navigation uses a simple logik:
 * the keys in the middle let you navigate inside a folder
     * g: for the left side
     * h: for the right side
+
+For copying or other commands there is a command-mode. To activate that mode just press `:`. To go back into normal mode use `esc`

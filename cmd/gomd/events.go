@@ -20,6 +20,11 @@ func (a *app) inputEvents(event *tcell.EventKey) *tcell.EventKey {
 			a.view.SetFocus(a.left)
 			a.cmdMode = false
 		}
+		if event.Key() == tcell.KeyEnter {
+			if a.cmd.GetText() != "" {
+				a.executeCommand(a.cmd.GetText())
+			}
+		}
 		return event
 	}
 	switch event.Key() {

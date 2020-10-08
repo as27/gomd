@@ -29,9 +29,13 @@ func (f *Folder) SetDir(fpath string) error {
 		return fmt.Errorf("gocmd.NewFolder(%s) Abs(): %w", fpath, err)
 	}
 	f.Path = fpath
-	files, err := ioutil.ReadDir(fpath)
+	return f.Update()
+}
+
+func (f *Folder) Update() error {
+	files, err := ioutil.ReadDir(f.Path)
 	if err != nil {
-		return fmt.Errorf("gocmd.NewFolder(%s) SetDir: %w", fpath, err)
+		return fmt.Errorf("gocmd.NewFolder(%s) Update: %w", f.Path, err)
 	}
 	f.files = files
 	f.selected = 0

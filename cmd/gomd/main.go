@@ -9,7 +9,7 @@ import (
 
 func main() {
 	a := newApp()
-	w, ok := a.bottom.(io.Writer)
+	w, ok := a.log.(io.Writer)
 	if ok {
 		log.SetOutput(w)
 	}

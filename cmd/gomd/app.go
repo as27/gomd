@@ -2,6 +2,8 @@ package main
 
 import (
 	"fmt"
+	"io"
+	"os"
 	"path/filepath"
 
 	"github.com/as27/gomd/internal/gocmd"
@@ -18,8 +20,10 @@ type app struct {
 	right    *browser
 	cmd      *tview.InputField
 	bottom   tview.Primitive
+	log      tview.Primitive
 	cmdMode  bool
 	commands []string
+	appOut   io.Writer
 }
 
 // newApp contains the initial configuration
@@ -51,6 +55,14 @@ func newApp() *app {
 		SetFieldBackgroundColor(tcell.ColorBlack)
 	a.cmd.SetAutocompleteFunc(a.cmdAutocomplete)
 	a.bottom = tview.NewTextView()
+	a.log = tview.NewTextView()
+
+	w, ok := a.bottom.(io.Writer)
+	if ok {
+		a.appOut = w
+	} else {
+		a.appOut = os.Stdout
+	}
 	return &a
 }
 
@@ -73,7 +85,8 @@ func (a *app) run() error {
 			AddItem(a.right, 0, 2, false),
 			0, 2, true).
 		AddItem(a.cmd, 1, 1, false).
-		AddItem(a.bottom, 4, 1, false)
+		AddItem(a.bottom, 2, 1, false).
+		AddItem(a.log, 4, 1, false)
 	//root.SetBorder(true)
 	root.SetTitle("gomd")
 	a.root = root
@@ -94,4 +107,8 @@ func (a *app) enterFolder(b *browser) error {
 	}
 	return b.Folder.SetDir(
 		filepath.Join(b.Folder.Path, selectedFile.Name()))
+}
+
+func (a *app) Println(i ...interface{}) {
+	fmt.Fprintln(a.appOut, i...)
 }

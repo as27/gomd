@@ -44,11 +44,12 @@ func (a *app) executeCommand(command string) {
 		if err := a.cmdMove(); err != nil {
 			fmt.Fprintln(a.appOut, "error: ", err)
 		}
-		a.left.Folder.Update()
-		a.left.makeTableView()
-		a.right.Folder.Update()
-		a.right.makeTableView()
+	case "remove", "rm":
+		if err := os.RemoveAll(filepath.Join(a.left.Folder.Path, a.left.Folder.SelectedFile().Name())); err != nil {
+			fmt.Fprintln(a.appOut, "error: ", err)
+		}
 	}
+	a.refreshView()
 	a.cmd.SetText("")
 }
 
@@ -69,4 +70,11 @@ func (a *app) cmdMove() error {
 		return nil
 	}
 	return os.Rename(oldpath, newpath)
+}
+
+func (a *app) refreshView() {
+	a.left.Folder.Update()
+	a.left.makeTableView()
+	a.right.Folder.Update()
+	a.right.makeTableView()
 }

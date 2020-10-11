@@ -44,11 +44,12 @@ func (a *app) executeCommand(command string) {
 		if err := a.cmdMove(); err != nil {
 			fmt.Fprintln(a.appOut, "error: ", err)
 		}
-		a.left.Folder.Update()
-		a.left.makeTableView()
-		a.right.Folder.Update()
-		a.right.makeTableView()
+	case "mkdir":
+		if err := a.cmdMkdir(); err != nil {
+			fmt.Fprintln(a.appOut, "error: ", err)
+		}
 	}
+	a.refreshView()
 	a.cmd.SetText("")
 }
 
@@ -69,4 +70,23 @@ func (a *app) cmdMove() error {
 		return nil
 	}
 	return os.Rename(oldpath, newpath)
+}
+
+func (a *app) refreshView() {
+	a.left.Folder.Update()
+	a.left.makeTableView()
+	a.right.Folder.Update()
+	a.right.makeTableView()
+}
+
+func (a *app) cmdMkdir() error {
+	var path string
+	dirNames := strings.Split(strings.TrimSpace(strings.TrimLeft(a.cmd.GetText(), "mkdir")), " ")
+	for i := range dirNames {
+		path = filepath.Join(a.left.Folder.Path, dirNames[i])
+		if err := os.MkdirAll(path, 0644); err != nil {
+			return err
+		}
+	}
+	return nil
 }

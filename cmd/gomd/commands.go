@@ -46,6 +46,8 @@ func (a *app) executeCommand(command string) {
 		}
 	case "mkdir":
 		if err := a.cmdMkdir(); err != nil {
+	case "remove", "rm":
+		if err := os.RemoveAll(filepath.Join(a.left.Folder.Path, a.left.Folder.SelectedFile().Name())); err != nil {
 			fmt.Fprintln(a.appOut, "error: ", err)
 		}
 	}

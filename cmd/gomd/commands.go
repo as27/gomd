@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -57,18 +58,44 @@ func (a *app) executeCommand(command string) {
 	a.cmd.SetText("")
 }
 
-func (a *app) cmdCopy() error {
+func (a *app) getPaths() (string, string) {
+	path1 := filepath.Join(
+		a.left.Folder.Path,
+		a.left.Folder.SelectedFile().Name())
+	path2 := filepath.Join(
+		a.right.Folder.Path,
+		a.left.Folder.SelectedFile().Name())
+	return path1, path2
+}
 
+func (a *app) cmdCopy() error {
+	srcpath, dstpath := a.getPaths()
+	sourceFileStat, err := os.Stat(srcpath)
+	if err != nil {
+		return err
+	}
+	if !sourceFileStat.Mode().IsRegular() {
+		return fmt.Errorf("%s is not a regular file", srcpath)
+	}
+	source, err := os.Open(srcpath)
+	if err != nil {
+		return err
+	}
+	defer source.Close()
+	destination, err := os.Create(dstpath)
+	if err != nil {
+		return err
+	}
+	defer destination.Close()
+	nBytes, err := io.Copy(destination, source)
+	if nBytes != sourceFileStat.Size() {
+		return fmt.Errorf("copy of file %s has not been completed", srcpath)
+	}
 	return nil
 }
 
 func (a *app) cmdMove() error {
-	oldpath := filepath.Join(
-		a.left.Folder.Path,
-		a.left.Folder.SelectedFile().Name())
-	newpath := filepath.Join(
-		a.right.Folder.Path,
-		a.left.Folder.SelectedFile().Name())
+	oldpath, newpath := a.getPaths()
 	if oldpath == newpath {
 		a.Println("nothing to move here")
 		return nil

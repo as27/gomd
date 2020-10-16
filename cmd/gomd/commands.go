@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -44,29 +45,72 @@ func (a *app) executeCommand(command string) {
 		if err := a.cmdMove(); err != nil {
 			fmt.Fprintln(a.appOut, "error: ", err)
 		}
-		a.left.Folder.Update()
-		a.left.makeTableView()
-		a.right.Folder.Update()
-		a.right.makeTableView()
+	case "mkdir":
+		if err := a.cmdMkdir(); err != nil {
+			fmt.Fprintln(a.appOut, "error: ", err)
+		}
+	case "remove", "rm":
+		if err := os.RemoveAll(filepath.Join(a.left.Folder.Path, a.left.Folder.SelectedFile().Name())); err != nil {
+			fmt.Fprintln(a.appOut, "error: ", err)
+		}
 	}
+	a.refreshView()
 	a.cmd.SetText("")
 }
 
-func (a *app) cmdCopy() error {
+func (a *app) getPaths() (leftPath string, rightPath string) {
+	leftPath = filepath.Join(
+		a.left.Folder.Path,
+		a.left.Folder.SelectedFile().Name())
+	rightPath = filepath.Join(
+		a.right.Folder.Path,
+		a.left.Folder.SelectedFile().Name())
+	return
+}
 
+func (a *app) cmdCopy() error {
+	srcPath, dstPath := a.getPaths()
+	sourceFileStat, err := os.Stat(srcPath)
+	if err != nil {
+		return err
+	}
+	if !sourceFileStat.Mode().IsRegular() {
+		return fmt.Errorf("%s is not a regular file", srcPath)
+	}
+	source, err := os.Open(srcPath)
+	if err != nil {
+		return err
+	}
+	defer source.Close()
+	destination, err := os.Create(dstPath)
+	if err != nil {
+		return err
+	}
+	defer destination.Close()
+	nBytes, err := io.Copy(destination, source)
+	if nBytes != sourceFileStat.Size() {
+		return fmt.Errorf("copy of file %s has not been completed", srcPath)
+	}
 	return nil
 }
 
 func (a *app) cmdMove() error {
-	oldpath := filepath.Join(
-		a.left.Folder.Path,
-		a.left.Folder.SelectedFile().Name())
-	newpath := filepath.Join(
-		a.right.Folder.Path,
-		a.left.Folder.SelectedFile().Name())
+	oldpath, newpath := a.getPaths()
 	if oldpath == newpath {
 		a.Println("nothing to move here")
 		return nil
 	}
 	return os.Rename(oldpath, newpath)
+}
+
+func (a *app) refreshView() {
+	a.left.Folder.Update()
+	a.left.makeTableView()
+	a.right.Folder.Update()
+	a.right.makeTableView()
+}
+
+func (a *app) cmdMkdir() error {
+	dirName := strings.TrimSpace(strings.TrimLeft(a.cmd.GetText(), "mkdir"))
+	return os.MkdirAll(filepath.Join(a.left.Folder.Path, dirName), 0755)
 }

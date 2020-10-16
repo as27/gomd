@@ -58,38 +58,38 @@ func (a *app) executeCommand(command string) {
 	a.cmd.SetText("")
 }
 
-func (a *app) getPaths() (string, string) {
-	path1 := filepath.Join(
+func (a *app) getPaths() (leftPath string, rightPath string) {
+	leftPath = filepath.Join(
 		a.left.Folder.Path,
 		a.left.Folder.SelectedFile().Name())
-	path2 := filepath.Join(
+	rightPath = filepath.Join(
 		a.right.Folder.Path,
 		a.left.Folder.SelectedFile().Name())
-	return path1, path2
+	return
 }
 
 func (a *app) cmdCopy() error {
-	srcpath, dstpath := a.getPaths()
-	sourceFileStat, err := os.Stat(srcpath)
+	srcPath, dstPath := a.getPaths()
+	sourceFileStat, err := os.Stat(srcPath)
 	if err != nil {
 		return err
 	}
 	if !sourceFileStat.Mode().IsRegular() {
-		return fmt.Errorf("%s is not a regular file", srcpath)
+		return fmt.Errorf("%s is not a regular file", srcPath)
 	}
-	source, err := os.Open(srcpath)
+	source, err := os.Open(srcPath)
 	if err != nil {
 		return err
 	}
 	defer source.Close()
-	destination, err := os.Create(dstpath)
+	destination, err := os.Create(dstPath)
 	if err != nil {
 		return err
 	}
 	defer destination.Close()
 	nBytes, err := io.Copy(destination, source)
 	if nBytes != sourceFileStat.Size() {
-		return fmt.Errorf("copy of file %s has not been completed", srcpath)
+		return fmt.Errorf("copy of file %s has not been completed", srcPath)
 	}
 	return nil
 }

@@ -91,7 +91,7 @@ func (a *app) cmdCopy() error {
 	if nBytes != sourceFileStat.Size() {
 		return fmt.Errorf("copy of file %s has not been completed", srcPath)
 	}
-	return nil
+	return err
 }
 
 func (a *app) cmdMove() error {

@@ -17,6 +17,8 @@ var implementedCommands = []string{
 	"rm",
 	"mkdir",
 	"makedir",
+	"q",
+	"quit",
 }
 
 func (a *app) cmdAutocomplete(currentText string) (entries []string) {
@@ -53,6 +55,8 @@ func (a *app) executeCommand(command string) {
 		if err := os.RemoveAll(filepath.Join(a.left.Folder.Path, a.left.Folder.SelectedFile().Name())); err != nil {
 			fmt.Fprintln(a.appOut, "error: ", err)
 		}
+	case "quit", "q":
+		a.view.Stop()
 	}
 	a.refreshView()
 	a.cmd.SetText("")

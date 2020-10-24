@@ -31,3 +31,11 @@ At present the navigation logics are quite simple:
     * h: for the right side
 
 For copying or other commands there is a command-mode. To activate that mode, just press `:`. To go back into normal mode use `esc`
+
+At the moment there are following commands implemented:
+
+* `copy`, `cp`: copies the file from the left to the right side
+* `move`, `mv`: moves the file from the left to the right side
+* `remove`,	`rm`: removes the file from the right side
+* `mkdir [dirname]`, `makedir [dirname]`: creates that folder on the left side
+* `q`, `quit`: exits the app

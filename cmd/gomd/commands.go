@@ -20,6 +20,8 @@ var implementedCommands = []string{
 	"q",
 	"quit",
 	"sync",
+	"sw",
+	"switch",
 }
 
 func (a *app) cmdAutocomplete(currentText string) (entries []string) {
@@ -58,6 +60,10 @@ func (a *app) executeCommand(command string) {
 		}
 	case "sync":
 		if err := a.cmdSync(); err != nil {
+			fmt.Fprintln(a.appOut, "error: ", err)
+		}
+	case "sw", "switch":
+		if err := a.cmdSwitch(); err != nil {
 			fmt.Fprintln(a.appOut, "error: ", err)
 		}
 	case "quit", "q":
@@ -126,4 +132,14 @@ func (a *app) cmdMkdir() error {
 
 func (a * app) cmdSync() error {
 	return a.right.Folder.SetDir(a.left.Folder.Path)
+}
+
+func (a * app) cmdSwitch() error {
+	leftPath := a.left.Folder.Path
+	rightPath := a.right.Folder.Path
+	err := a.left.Folder.SetDir(rightPath)
+	if(err != nil){
+		return err
+	}
+	return a.right.Folder.SetDir(leftPath)	
 }

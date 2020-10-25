@@ -1,6 +1,8 @@
 # gomd
 
-* A Prototype of file browser for command line. 
+_Important: This tool is a prototype and not production ready! Use it play with it and send some feedback. Just open an issue at github for this._
+
+* A prototype of file browser for command line. 
 
 * Main Motive:
     * To use tview and create something useful.
@@ -39,3 +41,13 @@ At the moment there are following commands implemented:
 * `remove`,	`rm`: removes the file from the right side
 * `mkdir [dirname]`, `makedir [dirname]`: creates that folder on the left side
 * `q`, `quit`: exits the app
+
+## Installation
+
+This tool is written in Go. For a fast installation just run 
+
+`go get github.com/as27/gomd/cmd/gomd`
+
+To update just type
+
+`go get -u github.com/as27/gomd/cmd/gomd`

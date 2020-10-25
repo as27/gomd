@@ -12,6 +12,7 @@ import (
 )
 
 type app struct {
+	conf  appConf
 	files gocmd.Files
 	view  *tview.Application
 	root  tview.Primitive
@@ -24,6 +25,10 @@ type app struct {
 	cmdMode  bool
 	commands []string
 	appOut   io.Writer
+}
+
+type appConf struct {
+	verbose bool
 }
 
 // newApp contains the initial configuration
@@ -85,8 +90,10 @@ func (a *app) run() error {
 			AddItem(a.right, 0, 2, false),
 			0, 2, true).
 		AddItem(a.cmd, 1, 1, false).
-		AddItem(a.bottom, 2, 1, false).
-		AddItem(a.log, 4, 1, false)
+		AddItem(a.bottom, 2, 1, false)
+	if a.conf.verbose {
+		root = root.AddItem(a.log, 4, 1, false)
+	}
 	//root.SetBorder(true)
 	root.SetTitle("gomd")
 	a.root = root

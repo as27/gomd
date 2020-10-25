@@ -1,6 +1,6 @@
 # gomd
 
-    Important: This tool is a prototype and not production ready! Use it play with it and send some feedback. Just open an issue at github for this.
+_Important: This tool is a prototype and not production ready! Use it play with it and send some feedback. Just open an issue at github for this._
 
 * A prototype of file browser for command line. 
 

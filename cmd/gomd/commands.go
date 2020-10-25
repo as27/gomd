@@ -19,6 +19,7 @@ var implementedCommands = []string{
 	"makedir",
 	"q",
 	"quit",
+	"sync",
 }
 
 func (a *app) cmdAutocomplete(currentText string) (entries []string) {
@@ -53,6 +54,10 @@ func (a *app) executeCommand(command string) {
 		}
 	case "remove", "rm":
 		if err := os.RemoveAll(filepath.Join(a.left.Folder.Path, a.left.Folder.SelectedFile().Name())); err != nil {
+			fmt.Fprintln(a.appOut, "error: ", err)
+		}
+	case "sync":
+		if err := a.cmdSync(); err != nil {
 			fmt.Fprintln(a.appOut, "error: ", err)
 		}
 	case "quit", "q":
@@ -117,4 +122,8 @@ func (a *app) refreshView() {
 func (a *app) cmdMkdir() error {
 	dirName := strings.TrimSpace(strings.TrimLeft(a.cmd.GetText(), "mkdir"))
 	return os.MkdirAll(filepath.Join(a.left.Folder.Path, dirName), 0755)
+}
+
+func (a * app) cmdSync() error {
+	return a.right.Folder.SetDir(a.left.Folder.Path)
 }

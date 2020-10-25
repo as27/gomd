@@ -137,6 +137,13 @@ func (a * app) cmdSync() error {
 func (a * app) cmdSwitch() error {
 	leftPath := a.left.Folder.Path
 	rightPath := a.right.Folder.Path
-	a.left.Folder.SetDir(rightPath)
-	return a.right.Folder.SetDir(leftPath)
+	err1 := a.left.Folder.SetDir(rightPath)
+	if(err1 != nil){
+		return err1
+	}
+	err2 := a.right.Folder.SetDir(leftPath)
+	if err2 != nil{
+		return err2
+	} 
+	return nil	
 }

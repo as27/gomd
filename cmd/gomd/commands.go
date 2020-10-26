@@ -71,6 +71,7 @@ func (a *app) executeCommand(command string) {
 	}
 	a.refreshView()
 	a.cmd.SetText("")
+	a.cmdMode = false
 }
 
 func (a *app) getPaths() (leftPath string, rightPath string) {
@@ -130,16 +131,16 @@ func (a *app) cmdMkdir() error {
 	return os.MkdirAll(filepath.Join(a.left.Folder.Path, dirName), 0755)
 }
 
-func (a * app) cmdSync() error {
+func (a *app) cmdSync() error {
 	return a.right.Folder.SetDir(a.left.Folder.Path)
 }
 
-func (a * app) cmdSwitch() error {
+func (a *app) cmdSwitch() error {
 	leftPath := a.left.Folder.Path
 	rightPath := a.right.Folder.Path
 	err := a.left.Folder.SetDir(rightPath)
-	if(err != nil){
+	if err != nil {
 		return err
 	}
-	return a.right.Folder.SetDir(leftPath)	
+	return a.right.Folder.SetDir(leftPath)
 }
